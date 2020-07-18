@@ -145,7 +145,7 @@ public abstract class CaptureActivity extends BaseActivity implements Callback {
         headWidget.setBackgroundColor(getResources().getColor(com.enzo.commonlib.R.color.color_green));
         headWidget.setLeftImage(com.enzo.commonlib.R.mipmap.flc_icon_back_default);
         headWidget.setTitle(getTitleText());
-        headWidget.setRightText("相册中选取");
+        headWidget.setRightText("相册");
         headWidget.setTitleColor(getResources().getColor(com.enzo.commonlib.R.color.color_white));
         headWidget.setRightTextColor(getResources().getColor(com.enzo.commonlib.R.color.color_white));
         headWidget.setLeftLayoutClickListener(new View.OnClickListener() {
@@ -188,7 +188,7 @@ public abstract class CaptureActivity extends BaseActivity implements Callback {
                     public void call(Boolean aBoolean) {
                         if (!aBoolean) {
                             finish();
-                            ToastUtils.showToast(CaptureActivity.this, "打开相机异常");
+                            ToastUtils.showToast(getApplicationContext(), "打开相机异常");
                         }
                     }
                 });
@@ -281,12 +281,11 @@ public abstract class CaptureActivity extends BaseActivity implements Callback {
                                         .thumbnailScale(0.85f)
                                         .imageEngine(new GlideEngine())
                                         .showSingleMediaType(true)
-                                        .originalEnable(true)
                                         .maxOriginalSize(10)
                                         .autoHideToolbarOnSingleTap(true)
                                         .forResult(PICK_IMAGE_REQUEST_CODE);
                             } else {
-                                ToastUtils.showToast(CaptureActivity.this, "设备没有SD卡！");
+                                ToastUtils.showToast(getApplicationContext(), "设备没有SD卡！");
                             }
                         } else {
                             LogUtil.d("PERMISSIONS_TAKE_PHOTO onDenied...");

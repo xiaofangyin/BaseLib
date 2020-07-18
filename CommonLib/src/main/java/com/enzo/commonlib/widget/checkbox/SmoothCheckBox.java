@@ -333,7 +333,7 @@ public class SmoothCheckBox extends View implements Checkable, View.OnClickListe
     }
 
     private int measureSize(int measureSpec) {
-        int defSize = DensityUtil.dip2px(getContext(), DEF_DRAW_SIZE);
+        int defSize = DensityUtil.dip2px(getContext(),DEF_DRAW_SIZE);
         int specSize = MeasureSpec.getSize(measureSpec);
         int specMode = MeasureSpec.getMode(measureSpec);
 

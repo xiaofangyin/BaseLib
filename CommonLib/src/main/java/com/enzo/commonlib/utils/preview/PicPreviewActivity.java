@@ -56,7 +56,7 @@ public class PicPreviewActivity extends BaseActivity {
         imageList = (ArrayList<PicsBean>) getIntent().getSerializableExtra("pic_list");
         curPosition = getIntent().getIntExtra("position", 0);
 
-        viewPager.setPageMargin(DensityUtil.dip2px(this, 15));
+        viewPager.setPageMargin(DensityUtil.dip2px(getApplicationContext(), 15));
         viewPager.setAdapter(new PagerAdapter() {
             @Override
             public int getCount() {
@@ -134,7 +134,7 @@ public class PicPreviewActivity extends BaseActivity {
 
     private void downLoadImage(String url) {
         LoadingDialog.show(PicPreviewActivity.this);
-        ToastUtils.showToast(this, "开始下载...");
+        ToastUtils.showToast(getApplicationContext(), "开始下载...");
         UGCFileUtils.downLoadImageAndSave(getApplicationContext(),
                 url,
                 UGCFileUtils.UGC_FILE_PARENT,
@@ -146,7 +146,7 @@ public class PicPreviewActivity extends BaseActivity {
                             @Override
                             public void run() {
                                 LoadingDialog.dismiss();
-                                ToastUtils.showToast(PicPreviewActivity.this, "下载成功");
+                                ToastUtils.showToast(getApplicationContext(), "下载成功");
                             }
                         });
                     }
@@ -157,7 +157,7 @@ public class PicPreviewActivity extends BaseActivity {
                             @Override
                             public void run() {
                                 LoadingDialog.dismiss();
-                                ToastUtils.showToast(PicPreviewActivity.this, "下载失败，请重试");
+                                ToastUtils.showToast(getApplicationContext(), "下载失败，请重试");
                             }
                         });
                     }
