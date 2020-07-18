@@ -1,0 +1,4 @@
+include ':CommonLib'
+include ':FLKit'
+include ':app'
+rootProject.name = "BaseLib"
