@@ -85,7 +85,7 @@ public class MediaStoreCompat {
                             @Override
                             public void call(Boolean aBoolean) {
                                 if (!aBoolean) {
-                                    ToastUtils.showToast("打开相机异常");
+                                    ToastUtils.showToast(context,"打开相机异常");
                                 } else {
                                     Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                                     if (captureIntent.resolveActivity(context.getPackageManager()) != null) {

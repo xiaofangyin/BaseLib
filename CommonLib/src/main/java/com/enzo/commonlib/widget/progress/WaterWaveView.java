@@ -14,8 +14,10 @@ import android.graphics.Paint;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+
 import androidx.annotation.Keep;
 import androidx.appcompat.widget.AppCompatImageView;
+
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -32,7 +34,7 @@ public class WaterWaveView extends AppCompatImageView {
     private static final float DEFAULT_WATER_LEVEL_RATIO = 0.5f;//水位
     private static final float DEFAULT_WAVE_LENGTH_RATIO = 1.0f;//波长
     private static final float DEFAULT_WAVE_SHIFT_RATIO = 0.0f;//偏移
-    public static final int DEFAULT_BORDER_WIDTH = DensityUtil.dip2px(1.5f);
+    public int DEFAULT_BORDER_WIDTH;
     public static final int DEFAULT_BORDER_COLOR = Color.parseColor("#f4f3f8");
 
     // Dynamic Properties
@@ -73,6 +75,7 @@ public class WaterWaveView extends AppCompatImageView {
     }
 
     private void init(Context context, AttributeSet attrs, int defStyleAttr) {
+        DEFAULT_BORDER_WIDTH = DensityUtil.dip2px(context, 1.5f);
         // Init paint
         paint = new Paint();
         paint.setAntiAlias(true);

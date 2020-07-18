@@ -1,7 +1,8 @@
-package com.enzo.commonlib.base;
+package com.enzo.baselib;
 
 import android.app.Application;
 import android.content.Context;
+
 import androidx.multidex.MultiDex;
 
 /**
