@@ -2,7 +2,6 @@ package com.enzo.commonlib.widget.pulltorefresh.recyclerview.defaultview;
 
 import android.animation.ObjectAnimator;
 import android.content.Context;
-import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,10 +11,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.enzo.commonlib.R;
+import com.enzo.commonlib.utils.common.LogUtil;
 import com.enzo.commonlib.widget.avi.AVLoadingIndicatorView;
-import com.enzo.commonlib.widget.pulltorefresh.recyclerview.PullToRefreshRecyclerViewUtils;
 import com.enzo.commonlib.widget.pulltorefresh.recyclerview.base.BasePullToRefreshView;
-import com.nineoldandroids.view.ViewHelper;
 
 /**
  * 文 件 名: DefaultRefreshHeaderView
@@ -27,11 +25,9 @@ public class DefaultRefreshHeaderView extends BasePullToRefreshView implements B
 
     private static final int ROTATE_DURATION = 180;
     private String tag = "";
-    private LinearLayout mRefreshContainer;//刷新时间布局
     private ImageView ivArrow;
     private TextView tvRefreshState;
     private AVLoadingIndicatorView progressView;
-    private TextView tvLastRefreshTime;
 
     private Context context;
     private ObjectAnimator rotateAnimator;
@@ -48,7 +44,6 @@ public class DefaultRefreshHeaderView extends BasePullToRefreshView implements B
     public void initView(Context context) {
         this.context = context;
         mContainer = LayoutInflater.from(context).inflate(R.layout.lib_layout_default_arrow_refresh, null);
-        mRefreshContainer = mContainer.findViewById(R.id.refresh_time_container);
 
         //把刷新头部的高度初始化为0
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -61,7 +56,6 @@ public class DefaultRefreshHeaderView extends BasePullToRefreshView implements B
         ivArrow = mContainer.findViewById(R.id.refresh_arrow);
         tvRefreshState = mContainer.findViewById(R.id.refresh_status_tv);
         progressView = mContainer.findViewById(R.id.av_progressbar);
-        tvLastRefreshTime = mContainer.findViewById(R.id.last_refresh_time);
 
         rotateAnimator = ObjectAnimator.ofFloat(ivArrow, "rotation", 0, -180);
         rotateAnimator.setDuration(ROTATE_DURATION);
@@ -69,26 +63,12 @@ public class DefaultRefreshHeaderView extends BasePullToRefreshView implements B
         //测量高度
         measure(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         mMeasuredHeight = getMeasuredHeight();
-
-        tvLastRefreshTime.setText(PullToRefreshRecyclerViewUtils.getTimeConvert(PullToRefreshRecyclerViewUtils.getLastRefreshTime(context, tag)));
     }
 
     @Override
-    public void setRefreshTimeVisible(String tag) {
-        if (mRefreshContainer != null) {
-            this.tag = tag;
-            mRefreshContainer.setVisibility(VISIBLE);
-        }
-    }
-
-    @Override
-    public void onRefreshTime() {
+    public void onPullDown() {
         if (mState == STATE_PULL_DOWN) {
-            //时间更新
-            if (!TextUtils.isEmpty(tag)) {
-                String time = PullToRefreshRecyclerViewUtils.getTimeConvert(PullToRefreshRecyclerViewUtils.getLastRefreshTime(context, tag));
-                tvLastRefreshTime.setText(time);
-            }
+            LogUtil.d("header view pull down...");
         }
     }
 
@@ -109,7 +89,7 @@ public class DefaultRefreshHeaderView extends BasePullToRefreshView implements B
             case STATE_PULL_DOWN:
                 ivArrow.setVisibility(View.VISIBLE);
                 ivArrow.setImageResource(R.mipmap.icon_refresh_arrow);
-                if (ViewHelper.getRotation(ivArrow) != 0) {
+                if (ivArrow.getRotation() != 0) {
                     rotateAnimator.reverse();
                 }
 
@@ -129,7 +109,7 @@ public class DefaultRefreshHeaderView extends BasePullToRefreshView implements B
                 }
                 break;
             case STATE_REFRESHING:
-                if (ViewHelper.getRotation(ivArrow) != 0) {
+                if (ivArrow.getRotation() != 0) {
                     rotateAnimator.reverse();
                 }
                 ivArrow.setVisibility(View.GONE);
@@ -141,14 +121,9 @@ public class DefaultRefreshHeaderView extends BasePullToRefreshView implements B
                 scrollTo(mMeasuredHeight);
                 break;
             case STATE_SUCCESS:
-                //时间更新
-                long currentTime = System.currentTimeMillis();
-                tvLastRefreshTime.setText(PullToRefreshRecyclerViewUtils.getTimeConvert(currentTime));
-                PullToRefreshRecyclerViewUtils.saveLastRefreshTime(context, tag, currentTime);
-
                 ivArrow.setVisibility(View.VISIBLE);
                 ivArrow.setImageResource(R.mipmap.refresh_succeed);
-                ViewHelper.setRotation(ivArrow, 0);
+                ivArrow.setRotation(0);
 
                 if (progressView != null) {
                     progressView.setVisibility(View.GONE);
@@ -158,7 +133,7 @@ public class DefaultRefreshHeaderView extends BasePullToRefreshView implements B
             case STATE_FAILED:
                 ivArrow.setVisibility(View.VISIBLE);
                 ivArrow.setImageResource(R.mipmap.refresh_failed);
-                ViewHelper.setRotation(ivArrow, 0);
+                ivArrow.setRotation(0);
 
                 if (progressView != null) {
                     progressView.setVisibility(View.GONE);

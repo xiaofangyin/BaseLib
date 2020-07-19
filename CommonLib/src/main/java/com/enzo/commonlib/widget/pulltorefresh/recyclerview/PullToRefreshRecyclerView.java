@@ -3,15 +3,16 @@ package com.enzo.commonlib.widget.pulltorefresh.recyclerview;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
-import android.util.AttributeSet;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
 
 import com.enzo.commonlib.widget.pulltorefresh.recyclerview.base.BaseLoadMoreView;
 import com.enzo.commonlib.widget.pulltorefresh.recyclerview.base.BasePullToRefreshView;
@@ -21,10 +22,7 @@ import com.enzo.commonlib.widget.pulltorefresh.recyclerview.defaultview.DefaultR
 import java.util.List;
 
 /**
- * 文 件 名: PullToRefreshRecyclerView
- * 创 建 人: xiaofangyin
- * 创建日期: 2017/12/12
- * 邮   箱: xiaofangyinwork@163.com
+ * https://github.com/AndroidKun/PullToRefreshRecyclerView
  */
 public class PullToRefreshRecyclerView extends RecyclerView {
 
@@ -73,7 +71,6 @@ public class PullToRefreshRecyclerView extends RecyclerView {
      */
     private void init(Context context) {
         handler = new Handler(Looper.getMainLooper());
-        //初始化头部刷新布局
         headerRefreshView = new DefaultRefreshHeaderView(context);
         loadMoreView = new DefaultLoadMoreView(context);
     }
@@ -106,11 +103,11 @@ public class PullToRefreshRecyclerView extends RecyclerView {
     /**
      * 自动加载
      */
-    public void setAutoRefresh() {
+    public void autoRefresh() {
         if (isAllowRefresh && mLoadingListener != null) {
             if (!isLoading() && !isRefreshing()) {
                 isLoadingData = true;
-                headerRefreshView.onRefreshTime();
+                headerRefreshView.onPullDown();
                 if (headerRefreshView.getOnStateChangeListener() != null) {
                     headerRefreshView.getOnStateChangeListener().onStateChange(BasePullToRefreshView.STATE_REFRESHING);
                 }
@@ -129,6 +126,10 @@ public class PullToRefreshRecyclerView extends RecyclerView {
      * 刷新数据完成
      */
     public void refreshSuccess() {
+        //因为刷新完后recycler的mScrollState还是SCROLL_STATE_DRAGGING,在onInterceptTouchEvent方法中
+        //return true,导致子view的点击事件被拦截，所以此处将mScrollState手动置成SCROLL_STATE_IDLE
+        stopScroll();
+
         isLoadingData = false;
         if (headerRefreshView != null) {
             headerRefreshView.refreshSuccess();
@@ -143,6 +144,10 @@ public class PullToRefreshRecyclerView extends RecyclerView {
      * 刷新数据失败
      */
     public void refreshFailed() {
+        //因为刷新完后recycler的mScrollState还是SCROLL_STATE_DRAGGING,在onInterceptTouchEvent方法中
+        //return true,导致子view的点击事件被拦截，所以此处将mScrollState手动置成SCROLL_STATE_IDLE
+        stopScroll();
+
         isLoadingData = false;
         if (headerRefreshView != null) {
             headerRefreshView.refreshFailed();
@@ -206,14 +211,6 @@ public class PullToRefreshRecyclerView extends RecyclerView {
         }
     }
 
-    /**
-     * 显示加载更新时间
-     */
-    public void setRefreshTimeVisible(String tag) {
-        if (headerRefreshView != null)
-            headerRefreshView.setRefreshTimeVisible(tag);
-    }
-
     @Override
     public void setAdapter(Adapter adapter) {
         this.insideAdapter = adapter;
@@ -264,11 +261,12 @@ public class PullToRefreshRecyclerView extends RecyclerView {
             int loadStatus = loadMoreView.getState();
             if (mLoadingListener != null && !isLoadingData && isAllowLoadMore && loadStatus == BaseLoadMoreView.STATE_SUCCESS) {
                 LayoutManager layoutManager = getLayoutManager();
-
-                if (layoutManager.getChildCount() > 0 && (findLastVisibleItemPosition(layoutManager) + 1 == layoutManager.getItemCount())) {
-                    isLoadingData = true;
-                    loadMoreView.setState(BaseLoadMoreView.STATE_LOADING);
-                    mLoadingListener.onRecyclerViewLoadMore();
+                if (layoutManager != null) {
+                    if (layoutManager.getChildCount() > 0 && (findLastVisibleItemPosition(layoutManager) + 1 == layoutManager.getItemCount())) {
+                        isLoadingData = true;
+                        loadMoreView.setState(BaseLoadMoreView.STATE_LOADING);
+                        mLoadingListener.onRecyclerViewLoadMore();
+                    }
                 }
             }
         }
@@ -294,7 +292,7 @@ public class PullToRefreshRecyclerView extends RecyclerView {
     public boolean dispatchTouchEvent(MotionEvent ev) {
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {
             if (headerRefreshView.getState() != BasePullToRefreshView.STATE_REFRESHING) {
-                headerRefreshView.onRefreshTime();
+                headerRefreshView.onPullDown();
             }
         }
         return super.dispatchTouchEvent(ev);
@@ -339,8 +337,9 @@ public class PullToRefreshRecyclerView extends RecyclerView {
         }
 
         int status = BasePullToRefreshView.STATE_SUCCESS;
-        if (headerRefreshView != null)
+        if (headerRefreshView != null) {
             status = headerRefreshView.getState();
+        }
 
         return status == BasePullToRefreshView.STATE_REFRESHING || super.onTouchEvent(ev);
     }
@@ -384,27 +383,57 @@ public class PullToRefreshRecyclerView extends RecyclerView {
 
         @Override
         public void onItemRangeInserted(int positionStart, int itemCount) {
-            mHeaderAndFooterAdapter.notifyItemRangeInserted(0, itemCount);
+            if (mHeaderAndFooterAdapter != null) {
+                if (isAllowRefresh) {
+                    mHeaderAndFooterAdapter.notifyItemRangeInserted(positionStart + 1, itemCount);
+                } else {
+                    mHeaderAndFooterAdapter.notifyItemRangeInserted(positionStart, itemCount);
+                }
+            }
         }
 
         @Override
         public void onItemRangeChanged(int positionStart, int itemCount) {
-            mHeaderAndFooterAdapter.notifyItemRangeChanged(0, itemCount);
+            if (mHeaderAndFooterAdapter != null) {
+                if (isAllowRefresh) {
+                    mHeaderAndFooterAdapter.notifyItemRangeChanged(positionStart + 1, itemCount);
+                } else {
+                    mHeaderAndFooterAdapter.notifyItemRangeChanged(positionStart, itemCount);
+                }
+            }
         }
 
         @Override
         public void onItemRangeChanged(int positionStart, int itemCount, Object payload) {
-            mHeaderAndFooterAdapter.notifyItemRangeChanged(0, itemCount, payload);
+            if (mHeaderAndFooterAdapter != null) {
+                if (isAllowRefresh) {
+                    mHeaderAndFooterAdapter.notifyItemRangeChanged(positionStart + 1, itemCount, payload);
+                } else {
+                    mHeaderAndFooterAdapter.notifyItemRangeChanged(positionStart, itemCount, payload);
+                }
+            }
         }
 
         @Override
         public void onItemRangeRemoved(int positionStart, int itemCount) {
-            mHeaderAndFooterAdapter.notifyItemRangeRemoved(0, itemCount);
+            if (mHeaderAndFooterAdapter != null) {
+                if (isAllowRefresh) {
+                    mHeaderAndFooterAdapter.notifyItemRangeRemoved(positionStart + 1, itemCount);
+                } else {
+                    mHeaderAndFooterAdapter.notifyItemRangeRemoved(positionStart, itemCount);
+                }
+            }
         }
 
         @Override
         public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
-            mHeaderAndFooterAdapter.notifyItemMoved(0, toPosition);
+            if (mHeaderAndFooterAdapter != null) {
+                if (isAllowRefresh) {
+                    mHeaderAndFooterAdapter.notifyItemMoved(fromPosition, toPosition);
+                } else {
+                    mHeaderAndFooterAdapter.notifyItemMoved(fromPosition, toPosition);
+                }
+            }
         }
     }
 
@@ -596,16 +625,6 @@ public class PullToRefreshRecyclerView extends RecyclerView {
             return adapter.onFailedToRecycleView(holder);
         }
 
-        @Override
-        public void unregisterAdapterDataObserver(AdapterDataObserver observer) {
-            adapter.unregisterAdapterDataObserver(observer);
-        }
-
-        @Override
-        public void registerAdapterDataObserver(AdapterDataObserver observer) {
-            adapter.registerAdapterDataObserver(observer);
-        }
-
         private class HeaderAndFooterViewHolder extends ViewHolder {
             HeaderAndFooterViewHolder(View itemView) {
                 super(itemView);
@@ -615,7 +634,6 @@ public class PullToRefreshRecyclerView extends RecyclerView {
 
     /**
      * ======================================================= 加载数据 =======================================================
-     * 设置加载更多监听
      */
     public void setOnLoadListener(OnLoadListener listener) {
         mLoadingListener = listener;
@@ -630,7 +648,7 @@ public class PullToRefreshRecyclerView extends RecyclerView {
         void onLoadMoreRetry();
     }
 
-    /**
+    /*
      * ======================================================= 加载数据 =======================================================
      */
 

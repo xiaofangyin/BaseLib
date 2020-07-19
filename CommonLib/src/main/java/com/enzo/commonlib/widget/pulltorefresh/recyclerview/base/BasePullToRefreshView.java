@@ -4,7 +4,9 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.view.View;
 import android.widget.LinearLayout;
 
@@ -69,10 +71,6 @@ public abstract class BasePullToRefreshView extends LinearLayout {
      */
     public boolean dealReleaseAction() {
         boolean isRefreshing = false;
-        //如果刷新布局没有显示，就不用进行下一步了
-        int height = getVisibleHeight();
-        if (height == 0)
-            isRefreshing = false;
 
         //下拉和释放两种状态之后就进入正在刷新状态
         if (getVisibleHeight() > mMeasuredHeight && mState < STATE_REFRESHING) {
@@ -181,14 +179,9 @@ public abstract class BasePullToRefreshView extends LinearLayout {
     public abstract void initView(Context context);
 
     /**
-     * 显示加载更新时间
-     */
-    public abstract void setRefreshTimeVisible(String tag);
-
-    /**
      * 手指按下回调
      */
-    public abstract void onRefreshTime();
+    public abstract void onPullDown();
 
     /**
      * 销毁页面对象和动画，防止内存泄漏
